@@ -9,157 +9,40 @@ from strategies.rsi_wema_strategy import wema_rsi_strategy
 from backtest.backtest_engine import backtest
 
 
+capital = 100000  # Initial capital
 
-
+for i in range(2016,2024):
 # === Load Data ===
-df = pd.read_csv('data/raw/nifty_50_mindata_2021.csv', parse_dates=['date'])
+    df = pd.read_csv(f'data/raw/nifty_50_mindata_{i}.csv', parse_dates=['date'])
 
-# === Rename Columns ===
-df.rename(columns={
-    'date': 'Datetime',
-    'open': 'Open',
-    'high': 'High',
-    'low': 'Low',
-    'close': 'Close',
-    'volume': 'Volume'
-}, inplace=True)
+    # === Rename Columns ===
+    df.rename(columns={
+        'date': 'Datetime',
+        'open': 'Open',
+        'high': 'High',
+        'low': 'Low',
+        'close': 'Close',
+        'volume': 'Volume'
+    }, inplace=True)
 
-# === Filter NSE Trading Hours: 09:15 to 15:30 ===
-df['Time'] = df['Datetime'].dt.time
-df = df[
-    (df['Time'] >= pd.to_datetime('09:15').time()) &
-    (df['Time'] <= pd.to_datetime('15:30').time())
-]
-df.drop(columns=['Time'], inplace=True)
+    # === Filter NSE Trading Hours: 09:15 to 15:30 ===
+    df['Time'] = df['Datetime'].dt.time
+    df = df[
+        (df['Time'] >= pd.to_datetime('09:15').time()) &
+        (df['Time'] <= pd.to_datetime('15:30').time())
+    ]
+    df.drop(columns=['Time'], inplace=True)
 
-# === Remove Missing Values and Reorder Columns ===
-df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+    # === Remove Missing Values and Reorder Columns ===
+    df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].dropna()
 
-# === Apply Strategy ===
-# strat_df = ema_crossover(df)
-# strat_df = rsi_mean_reversion(df)
-# strat_df = bollinger_band_reversal(df)
-# strat_df = donchian_breakout(df)
-strat_df = wema_rsi_strategy(df)
+    # === Apply Strategy ===
+    # strat_df = ema_crossover(df)
+    # strat_df = rsi_mean_reversion(df)
+    # strat_df = bollinger_band_reversal(df)
+    # strat_df = donchian_breakout(df)
+    strat_df = wema_rsi_strategy(df)
 
-# === Run Backtest ===
-print("Running backtest... for 2021 data")
-_, capital = backtest(strat_df)
-
-
-
-
-
-# === Load Data ===
-df = pd.read_csv('data/raw/nifty_50_mindata_2022.csv', parse_dates=['date'])
-
-# === Rename Columns ===
-df.rename(columns={
-    'date': 'Datetime',
-    'open': 'Open',
-    'high': 'High',
-    'low': 'Low',
-    'close': 'Close',
-    'volume': 'Volume'
-}, inplace=True)
-
-# === Filter NSE Trading Hours: 09:15 to 15:30 ===
-df['Time'] = df['Datetime'].dt.time
-df = df[
-    (df['Time'] >= pd.to_datetime('09:15').time()) &
-    (df['Time'] <= pd.to_datetime('15:30').time())
-]
-df.drop(columns=['Time'], inplace=True)
-
-# === Remove Missing Values and Reorder Columns ===
-df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].dropna()
-
-# === Apply Strategy ===
-# strat_df = ema_crossover(df)
-# strat_df = rsi_mean_reversion(df)
-# strat_df = bollinger_band_reversal(df)
-# strat_df = donchian_breakout(df)
-strat_df = wema_rsi_strategy(df)
-
-# === Run Backtest ===
-print("Running backtest... for 2022 data")
-_, capital = backtest(strat_df, initial_capital=capital)
-
-
-
-
-
-
-# === Load Data ===
-df = pd.read_csv('data/raw/nifty_50_mindata_2023.csv', parse_dates=['date'])
-
-# === Rename Columns ===
-df.rename(columns={
-    'date': 'Datetime',
-    'open': 'Open',
-    'high': 'High',
-    'low': 'Low',
-    'close': 'Close',
-    'volume': 'Volume'
-}, inplace=True)
-
-# === Filter NSE Trading Hours: 09:15 to 15:30 ===
-df['Time'] = df['Datetime'].dt.time
-df = df[
-    (df['Time'] >= pd.to_datetime('09:15').time()) &
-    (df['Time'] <= pd.to_datetime('15:30').time())
-]
-df.drop(columns=['Time'], inplace=True)
-
-# === Remove Missing Values and Reorder Columns ===
-df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].dropna()
-
-# === Apply Strategy ===
-# strat_df = ema_crossover(df)
-# strat_df = rsi_mean_reversion(df)
-# strat_df = bollinger_band_reversal(df)
-# strat_df = donchian_breakout(df)
-strat_df = wema_rsi_strategy(df)
-
-# === Run Backtest ===
-print("Running backtest... for 2023 data")
-_, capital = backtest(strat_df, initial_capital=capital)
-
-
-
-
-
-# === Load Data ===
-df = pd.read_csv('data/raw/nifty_50_mindata_2024.csv', parse_dates=['date'])
-
-# === Rename Columns ===
-df.rename(columns={
-    'date': 'Datetime',
-    'open': 'Open',
-    'high': 'High',
-    'low': 'Low',
-    'close': 'Close',
-    'volume': 'Volume'
-}, inplace=True)
-
-# === Filter NSE Trading Hours: 09:15 to 15:30 ===
-df['Time'] = df['Datetime'].dt.time
-df = df[
-    (df['Time'] >= pd.to_datetime('09:15').time()) &
-    (df['Time'] <= pd.to_datetime('15:30').time())
-]
-df.drop(columns=['Time'], inplace=True)
-
-# === Remove Missing Values and Reorder Columns ===
-df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].dropna()
-
-# === Apply Strategy ===
-# strat_df = ema_crossover(df)
-# strat_df = rsi_mean_reversion(df)
-# strat_df = bollinger_band_reversal(df)
-# strat_df = donchian_breakout(df)
-strat_df = wema_rsi_strategy(df)
-
-# === Run Backtest ===
-print("Running backtest... for 2024 data")
-_, capital = backtest(strat_df, initial_capital=capital)
+    # === Run Backtest ===
+    print(f"Running backtest... for {i} data")
+    _, capital = backtest(strat_df, initial_capital=capital)
