@@ -9,7 +9,7 @@ from strategies.rsi_wema_strategy import wema_rsi_strategy
 from backtest.backtest_engine import backtest
 
 # === Load Data ===
-df = pd.read_csv('data/raw/nifty_50_mindata_2023.csv', parse_dates=['date'])
+df = pd.read_csv('data/raw/nifty_50_mindata_2024.csv', parse_dates=['date'])
 
 # === Rename Columns ===
 df.rename(columns={

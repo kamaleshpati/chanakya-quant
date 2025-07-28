@@ -44,20 +44,22 @@ def wema_rsi_strategy(
 
     # === Signal Logic ===
     df['Signal'] = 0
+    df['Pattern'] = detect_candlestick_pattern(df)
 
     # Buy Signal Conditions
     buy_cond = (
-        (df['WEMA_fast'] > df['WEMA_slow']) &
-        (df['RSI_mean3'] > 45) &
-        (df['MACD'] > df['MACD_signal']) &
-        (df['ADX'] > 20) &
-        (df['Close'] > df['EMA_trend'])
+    (df['Pattern'] == 'BullishEngulfing') &
+    (df['WEMA_fast'] > df['WEMA_slow']) &
+    (df['RSI'] > 50) &
+    (df['MACD'] > df['MACD_signal']) &
+    (df['ADX'] > 20) &
+    (df['Close'] > df['EMA_trend'])
     )
 
-    # Sell Signal Conditions
     sell_cond = (
+        (df['Pattern'] == 'BearishEngulfing') &
         (df['WEMA_fast'] < df['WEMA_slow']) &
-        (df['RSI_mean3'] < 55) &
+        (df['RSI'] < 50) &
         (df['MACD'] < df['MACD_signal']) &
         (df['ADX'] > 20) &
         (df['Close'] < df['EMA_trend'])
@@ -65,6 +67,7 @@ def wema_rsi_strategy(
 
     df.loc[buy_cond, 'Signal'] = 1
     df.loc[sell_cond, 'Signal'] = -1
+
 
     # === Risk Management Placeholders ===
     df['Stop_Loss'] = df['Close'] * (1 - sl_pct)
@@ -75,3 +78,27 @@ def wema_rsi_strategy(
     df.drop(['RSI_mean3', 'MACD_signal'], axis=1, inplace=True)
 
     return df.dropna()
+
+
+def detect_candlestick_pattern(df):
+    pattern = []
+
+    for i in range(1, len(df)):
+        o, h, l, c = df['Open'].iloc[i], df['High'].iloc[i], df['Low'].iloc[i], df['Close'].iloc[i]
+        o_prev, c_prev = df['Open'].iloc[i-1], df['Close'].iloc[i-1]
+
+        # Bullish Engulfing
+        if (c > o) and (c_prev < o_prev) and (o < c_prev) and (c > o_prev):
+            pattern.append('BullishEngulfing')
+
+        # Bearish Engulfing
+        elif (c < o) and (c_prev > o_prev) and (o > c_prev) and (c < o_prev):
+            pattern.append('BearishEngulfing')
+
+        # No pattern
+        else:
+            pattern.append(None)
+
+    pattern.insert(0, None)  # For alignment
+    return pattern
+

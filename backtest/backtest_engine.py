@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-def backtest(df, initial_capital=1000000, sl_pct=0.015, tp_pct=0.025):
+def backtest(df, initial_capital=100000, sl_pct=0.015, tp_pct=0.025):
+    initial_capital_temp = initial_capital
     df = df.copy()
     df['Position'] = 0
     df['Equity'] = initial_capital
@@ -37,7 +38,8 @@ def backtest(df, initial_capital=1000000, sl_pct=0.015, tp_pct=0.025):
                     exit_reason = 'REV'
                 else:
                     continue
-                pnl = price - entry_price
+                qty = initial_capital//entry_price
+                pnl = (price - entry_price) * qty
             elif side == 'short':
                 if price >= stop_loss:
                     exit_reason = 'SL'
@@ -47,7 +49,8 @@ def backtest(df, initial_capital=1000000, sl_pct=0.015, tp_pct=0.025):
                     exit_reason = 'REV'
                 else:
                     continue
-                pnl = entry_price - price
+                qty = initial_capital//entry_price
+                pnl = (entry_price - price) * qty
 
             trades.append({
                 'Entry Time': entry_time,
@@ -59,22 +62,24 @@ def backtest(df, initial_capital=1000000, sl_pct=0.015, tp_pct=0.025):
                 'Exit Reason': exit_reason
             })
             in_trade = False
+            initial_capital += pnl
 
     # Create trade DataFrame
     trade_df = pd.DataFrame(trades)
-    equity = [initial_capital]
+    equity = [initial_capital_temp]
 
     for pnl in trade_df['PnL']:
         equity.append(equity[-1] + pnl)
     trade_df['Equity'] = equity[1:]
 
     # Metrics
-    total_return = (equity[-1] / initial_capital) - 1
-    returns = trade_df['PnL'] / initial_capital
+    total_return = (equity[-1] / initial_capital_temp) - 1
+    returns = trade_df['PnL'] / initial_capital_temp
     sharpe = np.mean(returns) / np.std(returns) * np.sqrt(len(trade_df)) if len(trade_df) > 1 else 0
     max_dd = max([max(equity[:i]) - equity[i] for i in range(1, len(equity))])
 
     print(f"Total Return: {total_return*100:.2f}%")
+    print(f"Final Return: ₹{initial_capital-initial_capital_temp:.2f}")
     print(f"Sharpe Ratio: {sharpe:.2f}")
     print(f"Max Drawdown: ₹{max_dd:.2f}")
     print(f"Total Trades: {len(trade_df)}")

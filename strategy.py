@@ -1,19 +1,17 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
-# === Load Data ===
 def load_data(filepath):
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
     return df
 
-# === Indicator Functions ===
 def compute_indicators(df, fast=9, slow=21, rsi_period=14):
     df['WEMA_fast'] = df['close'].ewm(span=fast, adjust=False).mean()
     df['WEMA_slow'] = df['close'].ewm(span=slow, adjust=False).mean()
 
-    # RSI manually
     delta = df['close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(rsi_period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(rsi_period).mean()
@@ -21,13 +19,11 @@ def compute_indicators(df, fast=9, slow=21, rsi_period=14):
     df['RSI'] = 100 - (100 / (1 + rs))
     df['RSI_mean3'] = df['RSI'].rolling(3).mean()
 
-    # MACD manually
     ema12 = df['close'].ewm(span=12, adjust=False).mean()
     ema26 = df['close'].ewm(span=26, adjust=False).mean()
     df['MACD'] = ema12 - ema26
     df['MACD_signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
 
-    # ADX manually
     df['+DM'] = df['high'].diff().where(df['high'].diff() > df['low'].diff(), 0)
     df['-DM'] = df['low'].diff().where(df['low'].diff() > df['high'].diff(), 0)
     tr = pd.concat([
@@ -40,39 +36,33 @@ def compute_indicators(df, fast=9, slow=21, rsi_period=14):
     df['-DI'] = 100 * (df['-DM'].rolling(14).sum() / atr)
     dx = 100 * (abs(df['+DI'] - df['-DI']) / (df['+DI'] + df['-DI']))
     df['ADX'] = dx.rolling(14).mean()
-
     return df
 
-# === Signal Strategy ===
 def generate_signals(df):
     df['Signal'] = 0
-    buy_cond = (
-        (df['WEMA_fast'] > df['WEMA_slow']) &
-        (df['RSI_mean3'] > 45) &
+    df.loc[
+        (df['WEMA_fast'] > df['WEMA_slow']) & 
+        (df['RSI_mean3'] > 45) & 
         (df['MACD'] > df['MACD_signal']) &
-        (df['ADX'] > 20)
-    )
-    sell_cond = (
+        (df['ADX'] > 20),
+        'Signal'] = 1
+    df.loc[
         (df['WEMA_fast'] < df['WEMA_slow']) &
         (df['RSI_mean3'] < 55) &
         (df['MACD'] < df['MACD_signal']) &
-        (df['ADX'] > 20)
-    )
-    df.loc[buy_cond, 'Signal'] = 1
-    df.loc[sell_cond, 'Signal'] = -1
+        (df['ADX'] > 20),
+        'Signal'] = -1
     return df
 
-# === Backtest ===
 def backtest(df, capital=1000000, sl_pct=0.01, tp_pct=0.02):
     trades = []
     position = None
     entry_price = None
     qty = 0
-
     equity = capital
+
     for i in range(1, len(df)):
         row = df.iloc[i]
-        prev = df.iloc[i - 1]
 
         if position is None:
             if row['Signal'] == 1:
@@ -130,30 +120,28 @@ def backtest(df, capital=1000000, sl_pct=0.01, tp_pct=0.02):
     ])
     return trades_df, equity
 
-# === Metrics ===
 def calculate_metrics(trades_df, initial_capital):
     total_return = (trades_df['Equity'].iloc[-1] - initial_capital) / initial_capital * 100
     daily_returns = trades_df['Equity'].pct_change().dropna()
-    sharpe_ratio = daily_returns.mean() / daily_returns.std() * (252 ** 0.5)
+    sharpe_ratio = daily_returns.mean() / daily_returns.std() * (252 ** 0.5) if len(daily_returns) > 1 else 0
     drawdown = (trades_df['Equity'].cummax() - trades_df['Equity']).max()
     return total_return, sharpe_ratio, drawdown
 
-# === Main ===
 if __name__ == "__main__":
-    path = 'data/raw/nifty_50_mindata_2023.csv'  # <-- Change path here
+    path = 'data/raw/nifty_50_mindata_2023.csv'  # your file path
+    initial_capital = 1000000
+
     df = load_data(path)
     df = compute_indicators(df)
     df = generate_signals(df)
-    
-    trades_df, final_equity = backtest(df)
-    total_return, sharpe, max_dd = calculate_metrics(trades_df, 1000000)
+    trades_df, final_equity = backtest(df, capital=initial_capital)
+    total_return, sharpe, max_dd = calculate_metrics(trades_df, initial_capital)
 
     print(f"\nTotal Return: {total_return:.2f}%")
     print(f"Sharpe Ratio: {sharpe:.2f}")
     print(f"Max Drawdown: ₹{max_dd:.2f}")
     print(f"Total Trades: {len(trades_df)}")
 
-    print(trades_df.tail())
-
-    # Optional: plot equity curve
-    trades_df.set_index('Exit Time')['Equity'].plot(title="Equity Curve")
+    trades_df.set_index('Exit Time')['Equity'].plot(title="Equity Curve", figsize=(12, 6))
+    plt.grid(True)
+    plt.show()
