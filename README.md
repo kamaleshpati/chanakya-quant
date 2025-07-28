@@ -13,7 +13,6 @@
 | 2023 | 20.69%           | ₹1,635,894.85     | 2.12         | ₹82,592.00       | 722          |
 | 2024 | 24.49%           | ₹1,980,193.10     | 1.91         | ₹22,075.45       | 756          |
 
----
 
 ## 📌 Pattern Detection Used:
 The strategy incorporates multiple candlestick and volume breakout patterns:
