@@ -83,6 +83,7 @@ def backtest(df, initial_capital=100000, sl_pct=0.015, tp_pct=0.025):
     print(f"Sharpe Ratio: {sharpe:.2f}")
     print(f"Max Drawdown: ₹{max_dd:.2f}")
     print(f"Total Trades: {len(trade_df)}")
+    print(f"Final Return Capita;: ₹{initial_capital:.2f}")
     print(trade_df.tail())
 
-    return trade_df
+    return trade_df, initial_capital

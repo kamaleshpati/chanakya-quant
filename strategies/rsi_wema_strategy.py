@@ -48,20 +48,20 @@ def wema_rsi_strategy(
 
     # Buy Signal Conditions
     buy_cond = (
-    (df['Pattern'] == 'BullishEngulfing') &
-    (df['WEMA_fast'] > df['WEMA_slow']) &
-    (df['RSI'] > 50) &
-    (df['MACD'] > df['MACD_signal']) &
-    (df['ADX'] > 20) &
-    (df['Close'] > df['EMA_trend'])
+        df['Pattern'].isin(['BullishEngulfing', 'MorningStar', 'Hammer', 'DojiBreakout']) &
+        (df['WEMA_fast'] > df['WEMA_slow']) &
+        (df['RSI'] > 35) &
+        (df['MACD'] > df['MACD_signal']) &
+        (df['ADX'] > 15) &
+        (df['Close'] > df['EMA_trend'])
     )
 
     sell_cond = (
-        (df['Pattern'] == 'BearishEngulfing') &
+       df['Pattern'].isin(['BearishEngulfing', 'EveningStar', 'InvertedHammer', 'DojiBreakout']) &
         (df['WEMA_fast'] < df['WEMA_slow']) &
-        (df['RSI'] < 50) &
+        (df['RSI'] < 60) &
         (df['MACD'] < df['MACD_signal']) &
-        (df['ADX'] > 20) &
+        (df['ADX'] > 15) &
         (df['Close'] < df['EMA_trend'])
     )
 
@@ -69,36 +69,66 @@ def wema_rsi_strategy(
     df.loc[sell_cond, 'Signal'] = -1
 
 
-    # === Risk Management Placeholders ===
+    # === Risk Management ===
     df['Stop_Loss'] = df['Close'] * (1 - sl_pct)
     df['Take_Profit'] = df['Close'] * (1 + tp_pct)
     df['Risk_Amount'] = risk_per_trade  # Assume this is % of capital
 
-    # === Clean up temporary columns ===
+    # === Clean up temp col ===
     df.drop(['RSI_mean3', 'MACD_signal'], axis=1, inplace=True)
 
     return df.dropna()
 
 
 def detect_candlestick_pattern(df):
-    pattern = []
+    pattern = [None]  # First row has no previous
 
-    for i in range(1, len(df)):
-        o, h, l, c = df['Open'].iloc[i], df['High'].iloc[i], df['Low'].iloc[i], df['Close'].iloc[i]
-        o_prev, c_prev = df['Open'].iloc[i-1], df['Close'].iloc[i-1]
+    for i in range(1, len(df) - 2):
+        o, h, l, c = df.iloc[i][['Open', 'High', 'Low', 'Close']]
+        o_prev, c_prev = df.iloc[i - 1][['Open', 'Close']]
+        o_next, c_next = df.iloc[i + 1][['Open', 'Close']]
 
-        # Bullish Engulfing
-        if (c > o) and (c_prev < o_prev) and (o < c_prev) and (c > o_prev):
-            pattern.append('BullishEngulfing')
+        body = abs(c - o)
+        prev_body = abs(c_prev - o_prev)
+        range_ = h - l
 
-        # Bearish Engulfing
-        elif (c < o) and (c_prev > o_prev) and (o > c_prev) and (c < o_prev):
-            pattern.append('BearishEngulfing')
+        # === Bullish Engulfing ===
+        if (c > o and c_prev < o_prev and o < c_prev and c > o_prev):
+            pattern.append("BullishEngulfing")
 
-        # No pattern
+        # === Bearish Engulfing ===
+        elif (c < o and c_prev > o_prev and o > c_prev and c < o_prev):
+            pattern.append("BearishEngulfing")
+
+        # === Morning Star ===
+        elif (c_prev < o_prev and abs(df.iloc[i]['Open'] - df.iloc[i]['Close']) < range_ * 0.3 and
+              c_next > o_next and c_next > (o_prev + c_prev) / 2):
+            pattern.append("MorningStar")
+
+        # === Evening Star ===
+        elif (c_prev > o_prev and abs(df.iloc[i]['Open'] - df.iloc[i]['Close']) < range_ * 0.3 and
+              c_next < o_next and c_next < (o_prev + c_prev) / 2):
+            pattern.append("EveningStar")
+
+        # === Hammer ===
+        elif body < range_ * 0.3 and (o - l > body * 2) and (h - c < body):
+            pattern.append("Hammer")
+
+        # === Inverted Hammer ===
+        elif body < range_ * 0.3 and (h - o > body * 2) and (c - l < body):
+            pattern.append("InvertedHammer")
+
+        # === Doji with Volume Breakout ===
+        elif abs(c - o) <= range_ * 0.1 and df['Volume'].iloc[i] > df['Volume'].rolling(20).mean().iloc[i] * 1.5:
+            pattern.append("DojiBreakout")
+
+        # === Inside Bar ===
+        elif (df['High'].iloc[i] < df['High'].iloc[i - 1]) and (df['Low'].iloc[i] > df['Low'].iloc[i - 1]):
+            pattern.append("InsideBar")
+
         else:
             pattern.append(None)
 
-    pattern.insert(0, None)  # For alignment
+    pattern.extend([None] * (len(df) - len(pattern)))  # Fill last few entries with None
     return pattern
 
