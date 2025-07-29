@@ -117,3 +117,19 @@ Breakout Strategies: Identify range breakouts using price & volume
 * Gap Trading: Detect and trade opening gaps with volume confirmation
 
 * News/Volume Spike: Leverage sudden changes in volume or news sentiment
+
+
+
+### Current improvement plans
+
+✅ RSI < 30 / MACD Bullish Cross (Signal Quality filter)
+
+✅ ATR filter (Avoid trades during low volatility)
+
+✅ Higher Timeframe (5m) confirmation using 1m data
+
+✅ Only trade long signals above 50 EMA
+
+✅ Add SuperTrend signal
+
+✅ Print logs when Buy/Sell patterns trigger
