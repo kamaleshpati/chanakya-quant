@@ -1,17 +1,13 @@
 import pandas as pd
 
-from strategies.ema_crossover import ema_crossover
-from strategies.rsi_mean_reversion import rsi_mean_reversion
-from strategies.bollinger_band_reversal import bollinger_band_reversal
-from strategies.donchian_breakout import donchian_breakout
-from strategies.rsi_wema_strategy import wema_rsi_strategy
+from strategies.composite_price_strategy import composite_strategy
 
 from backtest.backtest_engine import backtest
 
 
 capital = 100000  # Initial capital
 
-for i in range(2016,2024):
+for i in range(2024,2025):
 # === Load Data ===
     df = pd.read_csv(f'data/raw/nifty_50_mindata_{i}.csv', parse_dates=['date'])
 
@@ -36,12 +32,7 @@ for i in range(2016,2024):
     # === Remove Missing Values and Reorder Columns ===
     df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].dropna()
 
-    # === Apply Strategy ===
-    # strat_df = ema_crossover(df)
-    # strat_df = rsi_mean_reversion(df)
-    # strat_df = bollinger_band_reversal(df)
-    # strat_df = donchian_breakout(df)
-    strat_df = wema_rsi_strategy(df)
+    strat_df = composite_strategy(df)
 
     # === Run Backtest ===
     print(f"Running backtest... for {i} data")

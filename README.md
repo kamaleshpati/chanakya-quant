@@ -122,14 +122,24 @@ Breakout Strategies: Identify range breakouts using price & volume
 
 ### Current improvement plans
 
-✅ RSI < 30 / MACD Bullish Cross (Signal Quality filter)
+* ✅ RSI < 30 / MACD Bullish Cross (Signal Quality filter):  Done
 
-✅ ATR filter (Avoid trades during low volatility)
+* ✅ ATR filter (Avoid trades during low volatility) : Done
 
-✅ Higher Timeframe (5m) confirmation using 1m data
+* ✅ Higher Timeframe (5m) confirmation using 1m data: Done
 
-✅ Only trade long signals above 50 EMA
+* ✅ Only trade long signals above 50 EMA : Done
 
-✅ Add SuperTrend signal
+* ✅ Add SuperTrend signal : Done
 
-✅ Print logs when Buy/Sell patterns trigger
+* ✅ Print logs when Buy/Sell patterns trigger : Done
+
+| Strategy Name     | Covered? | Notes                                                                 | Covered |
+| ----------------- | -------- | --------------------------------------------------------------------- | --------|
+| Breakout Strategy | ✅Partial | Volume spike is covered via `DojiBreakout`, price breakout isn't.     | Done.  |
+| Gap Strategy      | ❌        | No open-close gap logic or morning session filtering.                 | Done.  |
+| Mean Reversion    | ❌        | No use of Bollinger/Keltner Bands or reversal conditions.             | Done.  |
+| News Spike Entry  | ✅Partial | Volume spike detection is present, but still tied to candle patterns. | Later with Vol startegy |
+
+* Training Own Model
+
