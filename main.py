@@ -7,9 +7,9 @@ from backtest.backtest_engine import backtest
 
 capital = 100000  # Initial capital
 
-for i in range(2024,2025):
+for i in range(2019,2025):
 # === Load Data ===
-    df = pd.read_csv(f'data/raw/nifty_50_mindata_{i}.csv', parse_dates=['date'])
+    df = pd.read_csv(f'data/market/raw/nifty_50_mindata_{i}.csv', parse_dates=['date'])
 
     # === Rename Columns ===
     df.rename(columns={

@@ -1,5 +1,8 @@
 import pandas as pd
 import ta
+from ml.predictor import predict
+import numpy as np
+
 
 def detect_candlestick_pattern(df):
     pattern = [None]  # First row has no previous
@@ -78,7 +81,8 @@ def composite_strategy(
     sl_pct=0.01,
     tp_pct=0.02,
     trend_window=50,
-    use_supertrend=True
+    use_ml=True,
+    ml_conf_threshold=0.85
 ):
     df = df.copy()
     df['Datetime'] = pd.to_datetime(df['Datetime'])
@@ -116,10 +120,25 @@ def composite_strategy(
     
     df['Signal'] = 0
 
-
-
     for i in range(len(df)):
         row = df.iloc[i]
+
+        # ml_decision = False
+        # if use_ml:
+        #     features = np.array([[
+        #         row['WEMA_fast'], row['WEMA_slow'], row['RSI'],
+        #         row['MACD'], row['MACD_signal'], row['ADX'], row['ATR'],
+        #         row['Deviation']
+        #     ]])
+        #     proba, conf = predict(features)
+        #     # Class 1: Buy, Class 0: Hold, Class -1: Sell
+        #     if conf[0] < ml_conf_threshold:
+        #         ml_decision = False
+        #     elif conf > ml_conf_threshold and proba[0] == 1:
+        #         ml_decision = True
+        #     else:
+        #         ml_decision = False
+
         buy_cond = (
             row['Pattern'] in ['BullishEngulfing', 'MorningStar', 'Hammer', 'DojiBreakout'] and
             row['WEMA_fast'] > row['WEMA_slow'] and
