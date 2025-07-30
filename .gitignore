@@ -194,3 +194,6 @@ cython_debug/
 .cursorindexingignore
 *temp*
 **/*.DS_Store
+
+**/*.joblib
+**/*.pkl
